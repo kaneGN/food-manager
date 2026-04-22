@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="食材管理">
+<title>食材管理</title>
+<style>
+:root {
+  --bg:#f7f6f2; --sur:#fff; --sur2:#f0efe9;
+  --bd:rgba(0,0,0,0.07); --bd2:rgba(0,0,0,0.13);
+  --tx:#1c1c1a; --tx2:#6b6a65; --tx3:#9b9a94;
+  --gr:#2d6a4f; --grl:#e8f5ee; --grm:#52b788;
+  --am:#c07820; --aml:#fef4e0;
+  --rd:#c03838; --rdl:#fdecea;
+  --bl:#2060a8; --bll:#e8f0fb;
+  --pu:#6040b0; --pul:#f0ecfc;
+  --or:#e07040; --orl:#fef0e8;
+  --r:12px; --rs:8px;
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg:#181816; --sur:#222220; --sur2:#2c2c28;
+  --bd:rgba(255,255,255,0.07); --bd2:rgba(255,255,255,0.13);
+  --tx:#eeeee8; --tx2:#9b9a94; --tx3:#6b6a65;
+  --gr:#52b788; --grl:#0c2418; --grm:#52b788;
+  --am:#e09830; --aml:#281c08;
+  --rd:#e05050; --rdl:#280c0c;
+  --bl:#5090e0; --bll:#081828;
+  --pu:#9070e0; --pul:#180c30;
+  --or:#e07040; --orl:#281808;
+}}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,'Hiragino Sans','Yu Gothic UI',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh}
+.app{max-width:480px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
+.hdr{background:var(--sur);border-bottom:0.5px solid var(--bd);padding:14px 16px 0;position:sticky;top:0;z-index:100}
+.hdr-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.logo{font-size:19px;font-weight:700;display:flex;align-items:center;gap:8px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--tx3);transition:background 0.3s;flex-shrink:0}
+.dot.ok{background:var(--grm)}.dot.ing{background:var(--am);animation:blink 1s infinite}.dot.err{background:var(--rd)}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.abadge{background:var(--rd);color:#fff;font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;display:none}
+.tabs{display:flex;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex-shrink:0;padding:8px 10px 10px;font-size:11px;font-weight:600;color:var(--tx3);background:none;border:none;border-bottom:2.5px solid transparent;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;white-space:nowrap;font-family:inherit}
+.tab.on{color:var(--gr);border-bottom-color:var(--gr)}
+.ticon{font-size:17px;line-height:1}
+.main{flex:1;padding:14px 14px 90px;display:flex;flex-direction:column;gap:12px}
+.pg{display:none;flex-direction:column;gap:12px}
+.pg.on{display:flex}
+.row{display:flex;align-items:center;justify-content:space-between}
+.sec-title{font-size:15px;font-weight:700;display:flex;align-items:center;gap:6px}
+.cat-lbl{font-size:10px;font-weight:700;color:var(--tx3);letter-spacing:.5px;padding:8px 2px 5px;border-bottom:.5px solid var(--bd);margin-bottom:4px}
+.empty{text-align:center;padding:36px 16px;color:var(--tx3);font-size:14px}
+.empty-ic{font-size:40px;margin-bottom:10px}
+.btn-green{background:var(--gr);color:#fff;border:none;border-radius:20px;padding:7px 15px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
+.btn-full{width:100%;background:var(--gr);color:#fff;border:none;border-radius:var(--rs);padding:14px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:4px}
+.btn-sub{width:100%;background:var(--sur2);color:var(--tx2);border:.5px solid var(--bd2);border-radius:var(--rs);padding:12px;font-size:15px;font-weight:500;cursor:pointer;font-family:inherit;margin-top:8px}
+.ibtn{background:none;border:.5px solid var(--bd2);border-radius:6px;padding:5px 7px;cursor:pointer;font-size:13px;color:var(--tx2)}
+.icard{background:var(--sur);border:.5px solid var(--bd);border-radius:var(--rs);padding:11px 13px;display:flex;align-items:center;gap:10px}
+.icard.warn{border-color:var(--am);background:var(--aml)}.icard.over{border-color:var(--rd);background:var(--rdl)}
+.iinfo{flex:1;min-width:0}
+.iname{font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.imeta{font-size:12px;color:var(--tx2);margin-top:2px;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.bdg{font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px}
+.bdg-ok{background:var(--grl);color:var(--gr)}.bdg-warn{background:var(--aml);color:var(--am)}.bdg-over{background:var(--rdl);color:var(--rd)}.bdg-none{background:var(--sur2);color:var(--tx3)}.bdg-type{background:var(--bll);color:var(--bl)}
+.scard{background:var(--sur);border:.5px solid var(--bd);border-radius:var(--rs);padding:10px 13px;display:flex;align-items:center;gap:10px}
+.scard.low{border-color:var(--or);background:var(--orl)}
+.shcard{background:var(--sur);border:.5px solid var(--bd);border-radius:var(--rs);padding:11px 13px;display:flex;align-items:center;gap:10px}
+.shcard.done{opacity:.5}
+.circle{width:22px;height:22px;border-radius:50%;border:2px solid var(--bd2);cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;background:var(--sur)}
+.circle.chk{background:var(--gr);border-color:var(--gr);color:#fff}
+.sh-auto{font-size:10px;padding:2px 6px;border-radius:4px;background:var(--pul);color:var(--pu);font-weight:600}
+.qadd{display:flex;gap:8px;align-items:center}
+.qinput{flex:1;background:var(--sur2);border:.5px solid var(--bd2);border-radius:20px;padding:9px 14px;font-size:14px;color:var(--tx);font-family:inherit}
+.qinput:focus{outline:none;border-color:var(--gr)}
+.qbtn{background:var(--gr);color:#fff;border:none;border-radius:50%;width:36px;height:36px;font-size:18px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.alert-box{background:var(--rdl);border:.5px solid var(--rd);border-radius:var(--r);padding:13px 15px}
+.alert-title{font-size:13px;font-weight:700;color:var(--rd);display:flex;align-items:center;gap:6px;margin-bottom:8px}
+.alert-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:.5px solid rgba(0,0,0,.05)}
+.alert-row:last-child{border:none}
+.alert-days{font-size:11px;font-weight:700;color:var(--rd)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.snum{background:var(--sur);border:.5px solid var(--bd);border-radius:var(--rs);padding:11px;text-align:center}
+.suggest{background:var(--sur);border:.5px solid var(--gr);border-radius:var(--r);padding:13px 15px;cursor:pointer;display:flex;align-items:center;gap:11px;width:100%;text-align:left;font-family:inherit;color:var(--gr);font-size:14px;font-weight:600}
+.chatbox{background:var(--sur);border:.5px solid var(--bd);border-radius:var(--r);padding:14px;min-height:180px;max-height:360px;overflow-y:auto;display:flex;flex-direction:column;gap:10px}
+.msg{max-width:86%}
+.msg-u{align-self:flex-end;background:var(--gr);color:#fff;border-radius:14px 14px 4px 14px;padding:9px 13px;font-size:14px;line-height:1.5}
+.msg-a{align-self:flex-start;background:var(--sur2);border-radius:14px 14px 14px 4px;padding:9px 13px;font-size:14px;line-height:1.6}
+.typing{align-self:flex-start;background:var(--sur2);border-radius:14px;padding:9px 13px;font-size:13px;color:var(--tx3)}
+.sblock{background:var(--sur);border:.5px solid var(--bd);border-radius:var(--r);overflow:hidden}
+.srow{display:flex;align-items:center;justify-content:space-between;padding:13px 15px;border-bottom:.5px solid var(--bd)}
+.srow:last-child{border:none}.srow.tap{cursor:pointer}
+.slbl{font-size:14px;font-weight:500}.ssub{font-size:11px;color:var(--tx3);margin-top:2px}
+.nctrl{display:flex;align-items:center;gap:9px}
+.nbtn{background:var(--sur2);border:.5px solid var(--bd2);border-radius:6px;width:28px;height:28px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--tx)}
+.nval{font-size:15px;font-weight:700;min-width:24px;text-align:center;color:var(--gr)}
+.ovl{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:flex-end;justify-content:center}
+.ovl.on{display:flex}
+.modal{background:var(--sur);border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:20px 18px;max-height:90vh;overflow-y:auto}
+.mhandle{width:36px;height:4px;background:var(--bd2);border-radius:2px;margin:0 auto 18px}
+.mtitle{font-size:17px;font-weight:700;margin-bottom:18px}
+.fg{margin-bottom:14px}
+.flbl{font-size:11px;font-weight:700;color:var(--tx2);margin-bottom:5px;display:block;text-transform:uppercase;letter-spacing:.4px}
+.finput{width:100%;background:var(--sur2);border:.5px solid var(--bd2);border-radius:var(--rs);padding:10px 12px;font-size:15px;color:var(--tx);font-family:inherit}
+.finput:focus{outline:none;border-color:var(--gr)}
+.fsel{width:100%;background:var(--sur2);border:.5px solid var(--bd2);border-radius:var(--rs);padding:10px 12px;font-size:15px;color:var(--tx);font-family:inherit;appearance:none}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="hdr">
+    <div class="hdr-top">
+      <div class="logo">🥬 食材管理 <div class="dot" id="dot"></div></div>
+      <div class="abadge" id="abadge"></div>
+    </div>
+    <div class="tabs">
+      <button class="tab on" id="T-home"    onclick="go('home')">   <span class="ticon">🏠</span>ホーム</button>
+      <button class="tab"    id="T-fridge"  onclick="go('fridge')"> <span class="ticon">🧊</span>冷蔵庫</button>
+      <button class="tab"    id="T-freezer" onclick="go('freezer')"><span class="ticon">❄️</span>冷凍庫</button>
+      <button class="tab"    id="T-pantry"  onclick="go('pantry')"> <span class="ticon">🍶</span>食材庫</button>
+      <button class="tab"    id="T-staple"  onclick="go('staple')"> <span class="ticon">📋</span>常備品</button>
+      <button class="tab"    id="T-shop"    onclick="go('shop')">   <span class="ticon">🛒</span>買い物</button>
+      <button class="tab"    id="T-recipe"  onclick="go('recipe')"> <span class="ticon">🍳</span>レシピ</button>
+      <button class="tab"    id="T-cfg"     onclick="go('cfg')">    <span class="ticon">⚙️</span>設定</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="pg on" id="P-home">
+      <div id="homeAlert"></div>
+      <button class="suggest" onclick="go('recipe');setTimeout(aiSuggest,200)">
+        <span style="font-size:22px">✨</span>
+        <div><div>今あるもので料理を提案</div><div style="font-size:12px;color:var(--tx3);font-weight:400;margin-top:2px">AIが登録食材でレシピ提案</div></div>
+      </button>
+      <div class="stats" id="homeStats"></div>
+      <div id="homeShop"></div>
+    </div>
+
+    <div class="pg" id="P-fridge">
+      <div class="row"><div class="sec-title">🧊 冷蔵庫</div><button class="btn-green" onclick="openItem('fridge')">＋ 追加</button></div>
+      <div id="L-fridge"></div>
+    </div>
+
+    <div class="pg" id="P-freezer">
+      <div class="row"><div class="sec-title">❄️ 冷凍庫</div><button class="btn-green" onclick="openItem('freezer')">＋ 追加</button></div>
+      <div id="L-freezer"></div>
+    </div>
+
+    <div class="pg" id="P-pantry">
+      <div class="row"><div class="sec-title">🍶 食材庫・調味料</div><button class="btn-green" onclick="openItem('pantry')">＋ 追加</button></div>
+      <div id="L-pantry"></div>
+    </div>
+
+    <div class="pg" id="P-staple">
+      <div class="row"><div class="sec-title">📋 常備品リスト</div><button class="btn-green" onclick="openStaple()">＋ 追加</button></div>
+      <div style="font-size:12px;color:var(--tx3);padding:0 2px 2px">在庫なし・期限切れで自動的に買い物リストへ追加されます</div>
+      <div id="L-staple"></div>
+    </div>
+
+    <div class="pg" id="P-shop">
+      <div class="row"><div class="sec-title">🛒 買い物リスト</div><button class="btn-green" onclick="openShop()">＋ 追加</button></div>
+      <div class="qadd">
+        <input class="qinput" id="qInput" placeholder="商品名を入力してすぐ追加…" onkeydown="if(event.key==='Enter')qAdd()">
+        <button class="qbtn" onclick="qAdd()">＋</button>
+      </div>
+      <div id="L-shop"></div>
+      <div id="L-shop-done"></div>
+    </div>
+
+    <div class="pg" id="P-recipe">
+      <div class="sec-title" style="margin-bottom:2px">💬 AIレシピ相談</div>
+      <div class="chatbox" id="chatbox">
+        <div class="msg msg-a">登録された食材をもとにレシピを提案します。「今日何作ろう？」「期限が近いもので何かある？」など自由に聞いてください🍳</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:flex-end;margin-top:2px">
+        <textarea class="qinput" id="chatIn" placeholder="例：今あるもので夕食を提案して" rows="1" style="border-radius:14px;padding:10px 14px;resize:none" onkeydown="chatKey(event)"></textarea>
+        <button class="qbtn" onclick="sendChat()" style="width:40px;height:40px;border-radius:50%;font-size:18px">↑</button>
+      </div>
+    </div>
+
+    <div class="pg" id="P-cfg">
+      <div style="font-size:14px;font-weight:700">🔥 Firebase同期状態</div>
+      <div class="sblock">
+        <div class="srow">
+          <div><div class="slbl">接続状態</div><div class="ssub" id="fbDetail">確認中…</div></div>
+          <div class="dot" id="dot2"></div>
+        </div>
+        <div class="srow tap" onclick="reconnectFb()">
+          <div><div class="slbl">再接続する</div><div class="ssub">同期できていない場合はこちら</div></div>
+          <span style="color:var(--tx3)">→</span>
+        </div>
+      </div>
+
+      <div style="font-size:14px;font-weight:700;margin-top:4px">アラート設定</div>
+      <div class="sblock">
+        <div class="srow">
+          <div><div class="slbl">賞味期限アラート</div><div class="ssub">何日前に通知</div></div>
+          <div class="nctrl">
+            <button class="nbtn" onclick="adj('bb',-1)">−</button>
+            <div class="nval" id="vbb">3</div>
+            <button class="nbtn" onclick="adj('bb',1)">＋</button>
+            <span style="font-size:12px;color:var(--tx3)">日前</span>
+          </div>
+        </div>
+        <div class="srow">
+          <div><div class="slbl">消費期限アラート</div><div class="ssub">何日前に通知</div></div>
+          <div class="nctrl">
+            <button class="nbtn" onclick="adj('ub',-1)">−</button>
+            <div class="nval" id="vub">1</div>
+            <button class="nbtn" onclick="adj('ub',1)">＋</button>
+            <span style="font-size:12px;color:var(--tx3)">日前</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="font-size:14px;font-weight:700;margin-top:4px">データ管理</div>
+      <div class="sblock">
+        <div class="srow tap" onclick="expData()"><div><div class="slbl">エクスポート</div><div class="ssub">JSONバックアップ</div></div><span style="color:var(--tx3)">→</span></div>
+        <div class="srow tap" onclick="document.getElementById('impFile').click()"><div><div class="slbl">インポート</div><div class="ssub">バックアップから復元</div></div><span style="color:var(--tx3)">→</span></div>
+        <div class="srow tap" onclick="clearDone()"><div><div class="slbl">購入済みを一括削除</div><div class="ssub">チェック済みアイテム</div></div><span style="color:var(--tx3)">→</span></div>
+      </div>
+      <input type="file" id="impFile" accept=".json" style="display:none" onchange="impData(event)">
+      <div style="font-size:12px;color:var(--tx3);padding:6px 4px;line-height:1.9">
+        📱 <strong>iPhoneのホーム画面に追加：</strong><br>
+        Safari → 下の共有ボタン（□↑）→「ホーム画面に追加」→「追加」
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ITEM MODAL -->
+<div class="ovl" id="M-item" onclick="if(event.target===this)closeM('M-item')">
+  <div class="modal">
+    <div class="mhandle"></div>
+    <div class="mtitle" id="M-item-title">食材を追加</div>
+    <div class="fg"><label class="flbl">商品名</label><input type="text" class="finput" id="f-name" placeholder="例：牛乳、醤油、鶏もも肉"></div>
+    <div class="frow">
+      <div class="fg"><label class="flbl">期限の種類</label>
+        <select class="fsel" id="f-etype">
+          <option value="best">賞味期限</option>
+          <option value="use">消費期限</option>
+          <option value="none">なし（調味料等）</option>
+        </select>
+      </div>
+      <div class="fg"><label class="flbl">期限日</label><input type="date" class="finput" id="f-date"></div>
+    </div>
+    <div class="fg"><label class="flbl">カテゴリー</label>
+      <select class="fsel" id="f-cat">
+        <option value="dairy">🥛 乳製品・卵</option>
+        <option value="meat">🥩 肉・魚</option>
+        <option value="veg">🥦 野菜・果物</option>
+        <option value="drink">🧃 飲み物</option>
+        <option value="prep">🍱 惣菜・加工品</option>
+        <option value="cond">🫙 調味料</option>
+        <option value="dry">🌾 乾物・穀物</option>
+        <option value="other">📦 その他</option>
+      </select>
+    </div>
+    <div class="fg"><label class="flbl">メモ</label><input type="text" class="finput" id="f-note" placeholder="例：開封済み、300g"></div>
+    <button class="btn-full" onclick="saveItem()">追加する</button>
+    <button class="btn-sub"  onclick="closeM('M-item')">キャンセル</button>
+  </div>
+</div>
+
+<!-- STAPLE MODAL -->
+<div class="ovl" id="M-staple" onclick="if(event.target===this)closeM('M-staple')">
+  <div class="modal">
+    <div class="mhandle"></div>
+    <div class="mtitle">常備品を追加</div>
+    <div class="fg"><label class="flbl">商品名</label><input type="text" class="finput" id="fs-name" placeholder="例：牛乳、卵、しょうゆ"></div>
+    <div class="fg"><label class="flbl">メモ・目安量</label><input type="text" class="finput" id="fs-note" placeholder="例：1パック、2本ストック"></div>
+    <button class="btn-full" onclick="saveStaple()">追加する</button>
+    <button class="btn-sub"  onclick="closeM('M-staple')">キャンセル</button>
+  </div>
+</div>
+
+<!-- SHOP MODAL -->
+<div class="ovl" id="M-shop" onclick="if(event.target===this)closeM('M-shop')">
+  <div class="modal">
+    <div class="mhandle"></div>
+    <div class="mtitle">買い物リストに追加</div>
+    <div class="fg"><label class="flbl">商品名</label><input type="text" class="finput" id="fsh-name" placeholder="例：牛乳、鶏もも肉 2枚"></div>
+    <div class="fg"><label class="flbl">メモ・数量</label><input type="text" class="finput" id="fsh-note" placeholder="例：1L、特売品でOK"></div>
+    <button class="btn-full" onclick="saveShop()">追加する</button>
+    <button class="btn-sub"  onclick="closeM('M-shop')">キャンセル</button>
+  </div>
+</div>
+
+<!-- Firebase SDK (compat = script tagで動く旧形式) -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+/* ── FIREBASE CONFIG ── */
+var FB = {
+  apiKey:"AIzaSyDcgtCyUo82t6BuZ6r4qDPDfJIWjhqOfbo",
+  authDomain:"food-manager-da4e8.firebaseapp.com",
+  projectId:"food-manager-da4e8",
+  storageBucket:"food-manager-da4e8.firebasestorage.app",
+  messagingSenderId:"1009782670408",
+  appId:"1:1009782670408:web:3a9d8ba5552b2a6ff7047d"
+};
+
+/* ── CATEGORIES ── */
+var CATS={
+  dairy:{l:'乳製品・卵',i:'🥛'}, meat:{l:'肉・魚',i:'🥩'},
+  veg:{l:'野菜・果物',i:'🥦'},   drink:{l:'飲み物',i:'🧃'},
+  prep:{l:'惣菜・加工品',i:'🍱'},cond:{l:'調味料',i:'🫙'},
+  dry:{l:'乾物・穀物',i:'🌾'},   other:{l:'その他',i:'📦'}
+};
+var ACAT={
+  '牛乳':'dairy','チーズ':'dairy','卵':'dairy','ヨーグルト':'dairy','豆腐':'dairy','納豆':'dairy','バター':'dairy',
+  '鶏':'meat','豚':'meat','牛肉':'meat','ひき肉':'meat','サーモン':'meat','魚':'meat','えび':'meat','たこ':'meat','ベーコン':'meat','ソーセージ':'meat',
+  'キャベツ':'veg','にんじん':'veg','たまねぎ':'veg','じゃがいも':'veg','ほうれん草':'veg','トマト':'veg','りんご':'veg','バナナ':'veg','レタス':'veg','きゅうり':'veg',
+  'ジュース':'drink','お茶':'drink','ビール':'drink',
+  '醤油':'cond','みそ':'cond','味噌':'cond','塩':'cond','砂糖':'cond','油':'cond','みりん':'cond','酢':'cond','ソース':'cond','ケチャップ':'cond','マヨネーズ':'cond','だし':'cond',
+  '米':'dry','パスタ':'dry','うどん':'dry','そば':'dry','海苔':'dry','昆布':'dry','小麦粉':'dry','片栗粉':'dry'
+};
+function acat(n){for(var k in ACAT)if(n.includes(k))return ACAT[k];return null;}
+
+/* ── STATE ── */
+var S={items:[],staples:[],shopping:[],settings:{bb:3,ub:1}};
+var db=null;
+var curStor='fridge', editId=null, chatHist=[];
+
+/* ── HELPERS ── */
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+function today(){return new Date().toISOString().split('T')[0];}
+function daysLeft(d){if(!d)return 9999;var t=new Date();t.setHours(0,0,0,0);return Math.ceil((new Date(d)-t)/86400000);}
+function expSt(item){
+  if(!item.date||item.etype==='none')return'ok';
+  var d=daysLeft(item.date),thr=item.etype==='use'?S.settings.ub:S.settings.bb;
+  if(d<0)return'over';if(d<=thr)return'warn';return'ok';
+}
+function expBadge(item){
+  if(!item.date||item.etype==='none')return'<span class="bdg bdg-none">期限なし</span>';
+  var d=daysLeft(item.date),tl=item.etype==='use'?'消費':'賞味',cls='bdg-ok',lb='あと'+d+'日';
+  if(d<0){cls='bdg-over';lb=Math.abs(d)+'日超過';}
+  else if(d===0){cls='bdg-over';lb='今日まで';}
+  else if(d===1){cls='bdg-warn';lb='明日まで';}
+  else if(expSt(item)==='warn')cls='bdg-warn';
+  return'<span class="bdg bdg-type">'+tl+'</span><span class="bdg '+cls+'">'+lb+'</span>';
+}
+function g(id){return document.getElementById(id);}
+function setDot(id,st){var d=g(id);d.className='dot';if(st)d.classList.add(st);}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+/* ── FIREBASE ── */
+function initFb(){
+  try{firebase.app();}catch(e){firebase.initializeApp(FB);}
+  db=firebase.firestore();
+  setDot('dot','ing');setDot('dot2','ing');
+  g('fbDetail').textContent='Firebaseに接続中…';
+  listenAll();
+}
+function listenAll(){
+  ['items','staples','shopping'].forEach(function(col){
+    db.collection(col).onSnapshot(function(snap){
+      S[col]=snap.docs.map(function(d){return Object.assign({id:d.id},d.data());});
+      renderAll();
+      autoAddStaples();
+      setDot('dot','ok');setDot('dot2','ok');
+      g('fbDetail').textContent='リアルタイム同期が有効です ✅';
+    },function(err){
+      console.error(err);
+      setDot('dot','err');setDot('dot2','err');
+      g('fbDetail').textContent='接続失敗。「再接続する」を押してください ❌';
+    });
+  });
+  db.collection('settings').doc('cfg').onSnapshot(function(doc){
+    if(doc.exists){var d=doc.data();if(d.bb!=null)S.settings.bb=d.bb;if(d.ub!=null)S.settings.ub=d.ub;g('vbb').textContent=S.settings.bb;g('vub').textContent=S.settings.ub;}
+  });
+}
+function reconnectFb(){setDot('dot','ing');setDot('dot2','ing');g('fbDetail').textContent='再接続中…';listenAll();}
+function dbSet(col,id,data){if(db)db.collection(col).doc(id).set(data);}
+function dbDel(col,id){if(db)db.collection(col).doc(id).delete();}
+
+/* ── RENDER ── */
+function renderAll(){renderAlerts();renderStats();renderStorage('fridge');renderStorage('freezer');renderStorage('pantry');renderStaples();renderShopping();renderShopPreview();}
+
+function renderAlerts(){
+  var als=S.items.filter(function(i){return i.date&&i.etype!=='none'&&expSt(i)!=='ok';}).sort(function(a,b){return daysLeft(a.date)-daysLeft(b.date);});
+  var badge=g('abadge');
+  if(als.length){badge.style.display='inline';badge.textContent=als.length+'件';}else{badge.style.display='none';}
+  var box=g('homeAlert');
+  if(!als.length){box.innerHTML='<div style="background:var(--grl);border:.5px solid var(--gr);border-radius:var(--r);padding:12px 15px;font-size:14px;color:var(--gr)">✅ 期限が近い食材はありません</div>';return;}
+  var rows=als.slice(0,5).map(function(i){var d=daysLeft(i.date);var lb=d<0?Math.abs(d)+'日超過':d===0?'今日まで':'あと'+d+'日';return'<div class="alert-row"><span style="font-size:13px;font-weight:500">'+esc(i.name)+'</span><span class="alert-days">'+lb+'</span></div>';}).join('');
+  box.innerHTML='<div class="alert-box"><div class="alert-title">⚠️ 期限が近い食材（'+als.length+'件）</div>'+rows+'</div>';
+}
+
+function renderStats(){
+  var f=S.items.filter(function(i){return i.stor==='fridge';}).length;
+  var fz=S.items.filter(function(i){return i.stor==='freezer';}).length;
+  var p=S.items.filter(function(i){return i.stor==='pantry';}).length;
+  g('homeStats').innerHTML='<div class="snum"><div style="font-size:20px">🧊</div><div style="font-size:22px;font-weight:700;color:var(--bl)">'+f+'</div><div style="font-size:10px;color:var(--tx3)">冷蔵庫</div></div><div class="snum"><div style="font-size:20px">❄️</div><div style="font-size:22px;font-weight:700;color:var(--pu)">'+fz+'</div><div style="font-size:10px;color:var(--tx3)">冷凍庫</div></div><div class="snum"><div style="font-size:20px">🍶</div><div style="font-size:22px;font-weight:700;color:var(--am)">'+p+'</div><div style="font-size:10px;color:var(--tx3)">食材庫</div></div>';
+}
+
+function renderStorage(stor){
+  var items=S.items.filter(function(i){return i.stor===stor;});
+  var el2=g('L-'+stor);
+  if(!items.length){el2.innerHTML='<div class="empty"><div class="empty-ic">'+(stor==='fridge'?'🧊':stor==='freezer'?'❄️':'🍶')+'</div>食材が登録されていません</div>';return;}
+  var bycat={};
+  items.forEach(function(item){if(!bycat[item.cat])bycat[item.cat]=[];bycat[item.cat].push(item);});
+  var html='';
+  Object.keys(bycat).forEach(function(cat){
+    var sorted=bycat[cat].slice().sort(function(a,b){return daysLeft(a.date)-daysLeft(b.date);});
+    var ci=CATS[cat]||{l:cat,i:'📦'};
+    html+='<div class="cat-lbl">'+ci.i+' '+ci.l+'</div>';
+    html+=sorted.map(function(item){
+      var st=expSt(item),cls=st==='warn'?' warn':st==='over'?' over':'';
+      return'<div class="icard'+cls+'"><div style="font-size:20px">'+(CATS[item.cat]||{i:'📦'}).i+'</div><div class="iinfo"><div class="iname">'+esc(item.name)+'</div><div class="imeta">'+expBadge(item)+(item.note?'<span style="color:var(--tx3)">'+esc(item.note)+'</span>':'')+'</div></div><div style="display:flex;gap:5px"><button class="ibtn" onclick="openEditItem(\''+item.id+'\')">✏️</button><button class="ibtn" onclick="delItem(\''+item.id+'\')">🗑️</button></div></div>';
+    }).join('');
+  });
+  el2.innerHTML=html;
+}
+
+function renderStaples(){
+  var el2=g('L-staple');
+  if(!S.staples.length){el2.innerHTML='<div class="empty"><div class="empty-ic">📋</div>常備品が登録されていません</div>';return;}
+  el2.innerHTML=S.staples.map(function(s){
+    var inStock=S.items.some(function(i){return i.name.includes(s.name)||s.name.includes(i.name);});
+    return'<div class="scard'+(inStock?'':' low')+'"><div style="font-size:20px">'+(inStock?'✅':'⚠️')+'</div><div style="flex:1"><div style="font-size:14px;font-weight:600">'+esc(s.name)+'</div><div style="font-size:11px;color:var(--tx3);margin-top:2px">'+(s.note?esc(s.note)+' ・ ':'')+(inStock?'在庫あり':'在庫なし → 買い物リストに追加済み')+'</div></div><button class="ibtn" onclick="delStaple(\''+s.id+'\')">🗑️</button></div>';
+  }).join('');
+}
+
+function renderShopping(){
+  var pending=S.shopping.filter(function(s){return!s.done;});
+  var done=S.shopping.filter(function(s){return s.done;});
+  var el2=g('L-shop'),el3=g('L-shop-done');
+  if(!pending.length&&!done.length){el2.innerHTML='<div class="empty"><div class="empty-ic">🛒</div>買い物リストは空です</div>';el3.innerHTML='';return;}
+  el2.innerHTML=pending.map(shopHtml).join('')||'<div style="text-align:center;padding:14px;font-size:13px;color:var(--gr)">✅ すべて購入済みです</div>';
+  el3.innerHTML=done.length?'<div style="font-size:11px;font-weight:700;color:var(--tx3);padding:8px 2px 4px">購入済み（'+done.length+'件）<button onclick="clearDone()" style="background:none;border:none;color:var(--tx3);font-size:11px;cursor:pointer;margin-left:8px;font-family:inherit">一括削除</button></div>'+done.map(shopHtml).join(''):'';
+}
+
+function shopHtml(s){
+  return'<div class="shcard'+(s.done?' done':'')+'"><div class="circle'+(s.done?' chk':'')+'" onclick="toggleShop(\''+s.id+'\')">'+(s.done?'✓':'')+'</div><div style="flex:1"><div style="font-size:14px;font-weight:500'+(s.done?';text-decoration:line-through;color:var(--tx3)':'')+'">'+esc(s.name)+'</div>'+(s.note?'<div style="font-size:11px;color:var(--tx3);margin-top:1px">'+esc(s.note)+'</div>':'')+'</div>'+(s.auto?'<span class="sh-auto">常備品</span>':'')+'<button class="ibtn" onclick="delShop(\''+s.id+'\')">🗑️</button></div>';
+}
+
+function renderShopPreview(){
+  var pending=S.shopping.filter(function(s){return!s.done;});
+  var el2=g('homeShop');
+  if(!pending.length){el2.innerHTML='';return;}
+  el2.innerHTML='<div style="background:var(--sur);border:.5px solid var(--bd);border-radius:var(--r);padding:14px 15px"><div style="font-size:15px;font-weight:700;margin-bottom:10px">🛒 買い物リスト（'+pending.length+'件）</div>'+pending.slice(0,4).map(function(s){return'<div style="font-size:13px;padding:5px 0;border-bottom:.5px solid var(--bd);display:flex;align-items:center;gap:8px">⬜ '+esc(s.name)+(s.note?'<span style="font-size:11px;color:var(--tx3)">'+esc(s.note)+'</span>':'')+(s.auto?'<span class="sh-auto">常備品</span>':'')+'</div>';}).join('')+(pending.length>4?'<div style="font-size:12px;color:var(--tx3);padding:5px 0">他 '+(pending.length-4)+' 件…</div>':'')+'<button onclick="go(\'shop\')" style="background:none;border:none;color:var(--gr);font-size:13px;font-weight:600;cursor:pointer;margin-top:8px;font-family:inherit">全て見る →</button></div>';
+}
+
+/* ── AUTO-ADD STAPLES ── */
+function autoAddStaples(){
+  S.staples.forEach(function(staple){
+    var inStock=S.items.some(function(i){return i.name.includes(staple.name)||staple.name.includes(i.name);});
+    var inList=S.shopping.some(function(s){return!s.done&&(s.name.includes(staple.name)||staple.name.includes(s.name));});
+    if(!inStock&&!inList)addShopItem(staple.name,staple.note||'',true);
+  });
+  S.items.filter(function(i){return expSt(i)==='over';}).forEach(function(item){
+    var isStaple=S.staples.some(function(s){return s.name.includes(item.name)||item.name.includes(s.name);});
+    var inList=S.shopping.some(function(s){return!s.done&&s.name.includes(item.name);});
+    if(isStaple&&!inList)addShopItem(item.name,'期限切れ→要補充',true);
+  });
+}
+
+/* ── CRUD: ITEMS ── */
+function openItem(stor){
+  curStor=stor;editId=null;
+  var icons={fridge:'🧊 冷蔵庫',freezer:'❄️ 冷凍庫',pantry:'🍶 食材庫'};
+  g('M-item-title').textContent=icons[stor]+'に追加';
+  ['f-name','f-date','f-note'].forEach(function(id){g(id).value='';});
+  g('f-etype').value='best';g('f-cat').value='other';
+  openM('M-item');
+  setTimeout(function(){g('f-name').focus();},100);
+}
+function openEditItem(id){
+  var item=S.items.find(function(i){return i.id===id;});if(!item)return;
+  curStor=item.stor;editId=id;
+  g('M-item-title').textContent='食材を編集';
+  g('f-name').value=item.name;g('f-date').value=item.date||'';g('f-etype').value=item.etype||'best';g('f-cat').value=item.cat||'other';g('f-note').value=item.note||'';
+  openM('M-item');
+}
+function saveItem(){
+  var name=g('f-name').value.trim();if(!name){alert('商品名を入力してください');return;}
+  var item={id:editId||uid(),name:name,stor:curStor,date:g('f-date').value||null,etype:g('f-etype').value,cat:acat(name)||g('f-cat').value,note:g('f-note').value.trim(),ts:Date.now()};
+  var idx=S.items.findIndex(function(i){return i.id===item.id;});
+  if(idx>=0)S.items[idx]=item;else S.items.push(item);
+  closeM('M-item');renderAll();dbSet('items',item.id,item);
+}
+function delItem(id){if(!confirm('削除しますか？'))return;S.items=S.items.filter(function(i){return i.id!==id;});renderAll();dbDel('items',id);}
+
+/* ── CRUD: STAPLES ── */
+function openStaple(){g('fs-name').value='';g('fs-note').value='';openM('M-staple');setTimeout(function(){g('fs-name').focus();},100);}
+function saveStaple(){
+  var name=g('fs-name').value.trim();if(!name){alert('商品名を入力してください');return;}
+  var s={id:uid(),name:name,note:g('fs-note').value.trim(),ts:Date.now()};
+  S.staples.push(s);closeM('M-staple');renderAll();dbSet('staples',s.id,s);
+}
+function delStaple(id){if(!confirm('削除しますか？'))return;S.staples=S.staples.filter(function(s){return s.id!==id;});renderAll();dbDel('staples',id);}
+
+/* ── CRUD: SHOPPING ── */
+function openShop(){g('fsh-name').value='';g('fsh-note').value='';openM('M-shop');setTimeout(function(){g('fsh-name').focus();},100);}
+function addShopItem(name,note,auto){var item={id:uid(),name:name,note:note||'',auto:!!auto,done:false,ts:Date.now()};S.shopping.push(item);dbSet('shopping',item.id,item);}
+function saveShop(){var name=g('fsh-name').value.trim();if(!name){alert('商品名を入力してください');return;}closeM('M-shop');addShopItem(name,g('fsh-note').value.trim(),false);renderAll();}
+function qAdd(){var inp=g('qInput'),name=inp.value.trim();if(!name)return;inp.value='';addShopItem(name,'',false);renderAll();}
+function toggleShop(id){var item=S.shopping.find(function(s){return s.id===id;});if(!item)return;item.done=!item.done;item.ts=Date.now();renderAll();dbSet('shopping',item.id,item);}
+function delShop(id){S.shopping=S.shopping.filter(function(s){return s.id!==id;});renderAll();dbDel('shopping',id);}
+function clearDone(){var ids=S.shopping.filter(function(s){return s.done;}).map(function(s){return s.id;});S.shopping=S.shopping.filter(function(s){return!s.done;});ids.forEach(function(id){dbDel('shopping',id);});renderAll();}
+
+/* ── SETTINGS ── */
+function adj(key,d){
+  if(key==='bb')S.settings.bb=Math.max(0,Math.min(14,S.settings.bb+d));
+  else S.settings.ub=Math.max(0,Math.min(14,S.settings.ub+d));
+  g('vbb').textContent=S.settings.bb;g('vub').textContent=S.settings.ub;
+  dbSet('settings','cfg',S.settings);renderAlerts();
+}
+
+/* ── EXPORT/IMPORT ── */
+function expData(){var b=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='food-backup-'+today()+'.json';a.click();}
+function impData(e){
+  var f=e.target.files[0];if(!f)return;
+  var r=new FileReader();
+  r.onload=function(ev){
+    try{
+      var d=JSON.parse(ev.target.result);
+      if(d.items)S.items=d.items;if(d.staples)S.staples=d.staples;if(d.shopping)S.shopping=d.shopping;
+      if(d.settings)S.settings=Object.assign(S.settings,d.settings);
+      if(db){S.items.forEach(function(i){dbSet('items',i.id,i);});S.staples.forEach(function(s){dbSet('staples',s.id,s);});S.shopping.forEach(function(s){dbSet('shopping',s.id,s);});dbSet('settings','cfg',S.settings);}
+      renderAll();g('vbb').textContent=S.settings.bb;g('vub').textContent=S.settings.ub;alert('インポート完了！');
+    }catch(err){alert('読み込み失敗：正しいJSONファイルを選択してください');}
+  };
+  r.readAsText(f);
+}
+
+/* ── CHAT ── */
+function invText(){
+  if(!S.items.length)return'食材が登録されていません。';
+  var gr={fridge:[],freezer:[],pantry:[]};
+  S.items.forEach(function(i){gr[i.stor].push(i.date&&i.etype!=='none'?i.name+'(あと'+daysLeft(i.date)+'日)':i.name);});
+  var t='';
+  if(gr.fridge.length)t+='【冷蔵庫】'+gr.fridge.join('、')+'\n';
+  if(gr.freezer.length)t+='【冷凍庫】'+gr.freezer.join('、')+'\n';
+  if(gr.pantry.length)t+='【食材庫・調味料】'+gr.pantry.join('、')+'\n';
+  return t;
+}
+function addMsg(text,role){var d=document.createElement('div');d.className='msg msg-'+(role==='user'?'u':'a');d.textContent=text;g('chatbox').appendChild(d);g('chatbox').scrollTop=99999;}
+function chatKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat();}}
+function sendChat(){
+  var inp=g('chatIn'),text=inp.value.trim();if(!text)return;inp.value='';
+  addMsg(text,'user');chatHist.push({role:'user',content:text});
+  var typing=document.createElement('div');typing.className='typing';typing.textContent='考え中…';g('chatbox').appendChild(typing);g('chatbox').scrollTop=99999;
+  fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:'あなたは食材管理と料理の専門家。在庫をもとに実用的なレシピを提案してください。\n現在の在庫：\n'+invText()+'\n日本の家庭料理向け・親しみやすい口調・レシピは料理名、食材、3〜4ステップで。',messages:chatHist.slice(-10)})})
+  .then(function(r){return r.json();}).then(function(d){
+    typing.remove();var reply=(d.content&&d.content[0]&&d.content[0].text)||'エラーが発生しました。';
+    chatHist.push({role:'assistant',content:reply});addMsg(reply,'ai');
+  }).catch(function(){typing.remove();addMsg('接続エラーが発生しました。しばらくしてから再試行してください。','ai');});
+}
+function aiSuggest(){
+  var exp=S.items.filter(function(i){return i.date&&i.etype!=='none'&&expSt(i)!=='ok';}).map(function(i){return i.name;}).join('、');
+  g('chatIn').value=exp?'期限が近い「'+exp+'」を使った夕食レシピを提案してください':'今ある食材で作れる夕食レシピを3つ提案してください';
+  sendChat();
+}
+
+/* ── NAVIGATION ── */
+function go(tab){
+  document.querySelectorAll('.pg').forEach(function(p){p.classList.remove('on');});
+  document.querySelectorAll('.tab').forEach(function(b){b.classList.remove('on');});
+  g('P-'+tab).classList.add('on');g('T-'+tab).classList.add('on');
+}
+function openM(id){g(id).classList.add('on');}
+function closeM(id){g(id).classList.remove('on');}
+
+/* ── BOOT ── */
+g('f-name').addEventListener('input',function(){var c=acat(this.value);if(c)g('f-cat').value=c;});
+initFb();
+renderAll();
+</script>
+</body>
+</html>
